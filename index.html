@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Game Vault</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"/>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <i class="ri-gamepad-fill"></i>
+            <span>Vault</span>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <section class="content-area">
+            <div class="view-header">
+                <h2 id="viewTitle">Trending & Popular Games</h2>
+            </div>
+
+            <div class="game-grid" id="gameGrid">
+                <!-- Skeletons for initial loading state -->
+                <div class="game-card">
+                    <div class="game-cover skeleton"></div>
+                    <div class="game-info">
+                        <div class="skeleton" style="height:20px; width:40%; margin-bottom:8px"></div>
+                        <div class="skeleton" style="height:28px; width:80%; margin-bottom:16px"></div>
+                        <div class="skeleton" style="height:20px; width:100%; margin-top:auto"></div>
+                    </div>
+                </div>
+                <div class="game-card">
+                    <div class="game-cover skeleton"></div>
+                    <div class="game-info">
+                        <div class="skeleton" style="height:20px; width:40%; margin-bottom:8px"></div>
+                        <div class="skeleton" style="height:28px; width:80%; margin-bottom:16px"></div>
+                        <div class="skeleton" style="height:20px; width:100%; margin-top:auto"></div>
+                    </div>
+                </div>
+                <div class="game-card">
+                    <div class="game-cover skeleton"></div>
+                    <div class="game-info">
+                        <div class="skeleton" style="height:20px; width:40%; margin-bottom:8px"></div>
+                        <div class="skeleton" style="height:28px; width:80%; margin-bottom:16px"></div>
+                        <div class="skeleton" style="height:20px; width:100%; margin-top:auto"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
