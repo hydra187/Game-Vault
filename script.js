@@ -1,16 +1,22 @@
 const API_KEY = '01099d4e10184b449bd2ca8ec7d43ffd';
 
 const state = {
-    games: []
+    games: [],
+    displayedGames: [],
+    favorites: []
 };
 
 // DOM Elements
 const els = {
-    gameGrid: document.getElementById('gameGrid')
+    gameGrid: document.getElementById('gameGrid'),
+    searchInput: document.getElementById('searchInput'),
+    sortSelect: document.getElementById('sortSelect'),
+    themeToggle: document.getElementById('themeToggle')
 };
 
 // Initialization
 async function init() {
+    addEventListeners();
     await fetchGames();
 }
 
@@ -25,6 +31,7 @@ async function fetchGames() {
         
         const data = await res.json();
         state.games = data.results || [];
+        state.displayedGames = [...state.games];
         renderGames();
     } catch (error) {
         console.error('Failed to fetch', error);
@@ -54,7 +61,7 @@ function showLoading() {
 
 // Rendering
 function renderGames() {
-    if (!state.games.length) {
+    if (!state.displayedGames.length) {
         els.gameGrid.innerHTML = `
             <div class="no-results">
                 <i class="ri-ghost-line"></i>
@@ -65,9 +72,13 @@ function renderGames() {
     }
 
     // Display fetched data dynamically
-    els.gameGrid.innerHTML = state.games.map(game => {
+    els.gameGrid.innerHTML = state.displayedGames.map(game => {
+        const isFav = state.favorites.includes(String(game.id));
         return `
             <div class="game-card">
+                <button class="favorite-btn ${isFav ? 'active' : ''}" data-id="${game.id}" aria-label="Favorite">
+                    <i class="ri-heart-3-line"></i>
+                </button>
                 <div class="game-cover">
                     <img src="${game.background_image || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="${game.name}" loading="lazy">
                 </div>
@@ -103,6 +114,66 @@ function getPlatformIcons(parentPlatforms) {
         .filter(id => icons[id])
         .map(id => `<i class="${icons[id]}"></i>`)
         .join('');
+}
+
+// Event Listeners
+function addEventListeners() {
+    if(els.searchInput) els.searchInput.addEventListener('input', handleSearch);
+    if(els.sortSelect) els.sortSelect.addEventListener('change', handleSort);
+    if(els.themeToggle) els.themeToggle.addEventListener('click', toggleTheme);
+    if(els.gameGrid) els.gameGrid.addEventListener('click', handleGridClick);
+}
+
+function handleSearch(e) {
+    const query = e.target.value.toLowerCase();
+    // Requirement: Use array filter 
+    state.displayedGames = state.games.filter(game => {
+        return game.name.toLowerCase().includes(query);
+    });
+    handleSort(); // Apply sort on the filtered results before rendering
+}
+
+function handleSort() {
+    const sortValue = els.sortSelect.value;
+    
+    // Requirement: Use array sort
+    state.displayedGames.sort((a, b) => {
+        if (sortValue === 'rating') {
+            return (b.rating || 0) - (a.rating || 0);
+        } else if (sortValue === 'release') {
+            const dateA = a.released ? new Date(a.released) : new Date(0);
+            const dateB = b.released ? new Date(b.released) : new Date(0);
+            return dateB - dateA;
+        } else if (sortValue === 'name') {
+            return a.name.localeCompare(b.name);
+        }
+        return 0; // default
+    });
+    
+    renderGames();
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.contains('light-mode');
+    els.themeToggle.innerHTML = isLight ? '<i class="ri-moon-line"></i>' : '<i class="ri-sun-line"></i>';
+}
+
+function handleGridClick(e) {
+    const btn = e.target.closest('.favorite-btn');
+    if (!btn) return;
+    
+    const gameId = btn.dataset.id;
+    const index = state.favorites.indexOf(gameId);
+    
+    if (index > -1) {
+        // Requirement: use array operations
+        state.favorites.splice(index, 1);
+        btn.classList.remove('active');
+    } else {
+        state.favorites.push(gameId);
+        btn.classList.add('active');
+    }
 }
 
 // Start app

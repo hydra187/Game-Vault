@@ -19,12 +19,29 @@
             <i class="ri-gamepad-fill"></i>
             <span>Vault</span>
         </div>
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+            <i class="ri-sun-line"></i>
+        </button>
     </header>
 
     <main class="main-layout">
         <section class="content-area">
             <div class="view-header">
                 <h2 id="viewTitle">Trending & Popular Games</h2>
+                <div class="controls-bar">
+                    <div class="search-wrapper">
+                        <i class="ri-search-line"></i>
+                        <input type="text" id="searchInput" placeholder="Search games...">
+                    </div>
+                    <div class="sort-wrapper">
+                        <select id="sortSelect">
+                            <option value="default">Sort by: Default</option>
+                            <option value="rating">Rating (High to Low)</option>
+                            <option value="release">Release Date (Newest)</option>
+                            <option value="name">Name (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="game-grid" id="gameGrid">
