@@ -2,6 +2,8 @@
 
 A modern web application to explore, search, and compare classic and modern video games using the RAWG API. Build your personal wishlist, filter by platforms, and discover games in a visually rich interface.
 
+**🚀 Live Demo:** [Retro Game Vault](https://hydra187.github.io/Game-Vault/)
+
 ---
 
 ## 📌 Description

@@ -16,15 +16,28 @@ const els = {
 
 // Initialization
 async function init() {
+    loadFavorites(); // Ensure favorites are loaded (feature was missing initialization)
     addEventListeners();
     await fetchGames();
 }
 
+// Utility: Debounce function for search
+function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), delay);
+    };
+}
+
 // API
-async function fetchGames() {
+async function fetchGames(searchQuery = '') {
     showLoading();
     try {
-        const url = `https://api.rawg.io/api/games?key=${API_KEY}&page_size=20`;
+        let url = `https://api.rawg.io/api/games?key=${API_KEY}&page_size=20`;
+        if (searchQuery) {
+            url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
         const res = await fetch(url);
         
         if (!res.ok) throw new Error('Network response was not ok');
@@ -32,7 +45,7 @@ async function fetchGames() {
         const data = await res.json();
         state.games = data.results || [];
         state.displayedGames = [...state.games];
-        renderGames();
+        handleSort(); // Make sure current sort is applied after fetching
     } catch (error) {
         console.error('Failed to fetch', error);
         els.gameGrid.innerHTML = `
@@ -124,13 +137,15 @@ function addEventListeners() {
     if(els.gameGrid) els.gameGrid.addEventListener('click', handleGridClick);
 }
 
+// Debounced handler for search input
+const debouncedSearch = debounce(async (query) => {
+    await fetchGames(query);
+}, 500);
+
 function handleSearch(e) {
-    const query = e.target.value.toLowerCase();
-    // Requirement: Use array filter 
-    state.displayedGames = state.games.filter(game => {
-        return game.name.toLowerCase().includes(query);
-    });
-    handleSort(); // Apply sort on the filtered results before rendering
+    const query = e.target.value.toLowerCase().trim();
+    // Requirement: Real-time search powered by RAWG API with debounce
+    debouncedSearch(query);
 }
 
 function handleSort() {
@@ -173,6 +188,27 @@ function handleGridClick(e) {
     } else {
         state.favorites.push(gameId);
         btn.classList.add('active');
+    }
+    saveFavorites();
+}
+
+// LocalStorage helpers for persistent wishlist
+function saveFavorites() {
+    try {
+        localStorage.setItem('gameFavorites', JSON.stringify(state.favorites));
+    } catch (e) {
+        console.error("Could not save to localStorage", e);
+    }
+}
+
+function loadFavorites() {
+    try {
+        const stored = localStorage.getItem('gameFavorites');
+        if (stored) {
+            state.favorites = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error("Could not load from localStorage", e);
     }
 }
 
