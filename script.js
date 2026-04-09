@@ -10,6 +10,7 @@ const state = {
 const els = {
     gameGrid: document.getElementById('gameGrid'),
     searchInput: document.getElementById('searchInput'),
+    platformFilter: document.getElementById('platformFilter'),
     sortSelect: document.getElementById('sortSelect'),
     themeToggle: document.getElementById('themeToggle')
 };
@@ -31,13 +32,12 @@ function debounce(func, delay) {
 }
 
 // API
-async function fetchGames(searchQuery = '') {
+// API
+// Note: Fetch 100 items here so there's enough data to filter and search locally using HOFs
+async function fetchGames() {
     showLoading();
     try {
-        let url = `https://api.rawg.io/api/games?key=${API_KEY}&page_size=20`;
-        if (searchQuery) {
-            url += `&search=${encodeURIComponent(searchQuery)}`;
-        }
+        let url = `https://api.rawg.io/api/games?key=${API_KEY}&page_size=100`;
         const res = await fetch(url);
         
         if (!res.ok) throw new Error('Network response was not ok');
@@ -45,7 +45,7 @@ async function fetchGames(searchQuery = '') {
         const data = await res.json();
         state.games = data.results || [];
         state.displayedGames = [...state.games];
-        handleSort(); // Make sure current sort is applied after fetching
+        applyFiltersAndSort(); // Make sure current sort is applied after fetching
     } catch (error) {
         console.error('Failed to fetch', error);
         els.gameGrid.innerHTML = `
@@ -130,28 +130,53 @@ function getPlatformIcons(parentPlatforms) {
 }
 
 // Event Listeners
+// Event Listeners
 function addEventListeners() {
-    if(els.searchInput) els.searchInput.addEventListener('input', handleSearch);
-    if(els.sortSelect) els.sortSelect.addEventListener('change', handleSort);
+    if(els.searchInput) els.searchInput.addEventListener('input', handleSearchInput);
+    if(els.platformFilter) els.platformFilter.addEventListener('change', applyFiltersAndSort);
+    if(els.sortSelect) els.sortSelect.addEventListener('change', applyFiltersAndSort);
     if(els.themeToggle) els.themeToggle.addEventListener('click', toggleTheme);
     if(els.gameGrid) els.gameGrid.addEventListener('click', handleGridClick);
 }
 
-// Debounced handler for search input
-const debouncedSearch = debounce(async (query) => {
-    await fetchGames(query);
-}, 500);
+// Debounce wrapper for input
+const debouncedApplyFilters = debounce(applyFiltersAndSort, 500);
 
-function handleSearch(e) {
-    const query = e.target.value.toLowerCase().trim();
-    // Requirement: Real-time search powered by RAWG API with debounce
-    debouncedSearch(query);
+function handleSearchInput() {
+    debouncedApplyFilters();
 }
 
-function handleSort() {
-    const sortValue = els.sortSelect.value;
+// Core Logic using Array Higher-Order Functions (filter, some, sort)
+function applyFiltersAndSort() {
+    if (!state.games || !state.games.length) return;
     
-    // Requirement: Use array sort
+    const query = (els.searchInput.value || '').toLowerCase().trim();
+    const platform = els.platformFilter ? els.platformFilter.value : 'all';
+    const sortValue = els.sortSelect ? els.sortSelect.value : 'default';
+    
+    // 1. Requirement: Use Array.filter() for Searching and Filtering
+    // Requirement is strictly NO traditional loops.
+    state.displayedGames = state.games.filter(game => {
+        // Search condition
+        const matchesSearch = game.name.toLowerCase().includes(query);
+        
+        // Filter condition using Array.some()
+        let matchesPlatform = true;
+        if (platform !== 'all' && game.parent_platforms) {
+            matchesPlatform = game.parent_platforms.some(p => {
+                const slug = p.platform.slug.toLowerCase();
+                if (platform === 'pc') return slug === 'pc';
+                if (platform === 'playstation') return slug.includes('playstation');
+                if (platform === 'xbox') return slug.includes('xbox');
+                if (platform === 'nintendo') return slug.includes('nintendo') || slug === 'mac'; // RAWG uses slightly different slugs sometimes
+                return false;
+            });
+        }
+        
+        return matchesSearch && matchesPlatform;
+    });
+    
+    // 2. Requirement: Use Array.sort() for Sorting
     state.displayedGames.sort((a, b) => {
         if (sortValue === 'rating') {
             return (b.rating || 0) - (a.rating || 0);
@@ -162,7 +187,7 @@ function handleSort() {
         } else if (sortValue === 'name') {
             return a.name.localeCompare(b.name);
         }
-        return 0; // default
+        return 0; // default order
     });
     
     renderGames();
